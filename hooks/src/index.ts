@@ -5,8 +5,10 @@ import express from "express";
 const app = express();
 
 app.post("/hooks/catch/:userId/:zapId", (req, res) => {
+
 	const { userId, zapId } = req.params;
 
 	// store it in a db
 	// push it on a queue (kafka / redis)
+	
 });
