@@ -14,26 +14,53 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
-// eg: https://hooks.zapier.com/hooks/catch/17038168/285ebaj/
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const client = new client_1.PrismaClient();
-app.post("/hooks/catch/:userId/:zapId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const webhookHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, zapId } = req.params;
     const body = req.body;
-    // store in a db a new trigger
-    yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const run = yield client.zapRun.create({
-            data: {
-                zapId: zapId,
-                metadata: body,
-            }
+    try {
+        yield client.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const run = yield tx.zapRun.create({
+                data: {
+                    zapId: zapId,
+                    metadata: body,
+                },
+            });
+            yield tx.zapRunOutbox.create({
+                data: {
+                    zapRunId: run.id,
+                },
+            });
+            console.log(`Webhook successfully hit for zapId: ${zapId}`);
+        }), {
+            timeout: 5000, // 5 second timeout
         });
-        yield client.zapRunOutbox.create({
-            data: {
-                zapRunId: run.id,
-            }
+        res.status(200).json({
+            message: "Webhook successfully hit",
+            zapId,
         });
-    }));
-}));
-app.listen(3000);
+    }
+    catch (error) {
+        console.error("Error processing webhook:", error);
+        res.status(500).json({
+            message: "Error processing webhook",
+            error: error instanceof Error
+                ? error.message
+                : "Unknown error occurred",
+        });
+    }
+    finally {
+        yield client.$disconnect();
+    }
+});
+app.post("/hooks/catch/:userId/:zapId", webhookHandler);
+// Add error handling for uncaught exceptions
+process.on("unhandledRejection", (error) => {
+    console.error("Unhandled rejection:", error);
+});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
