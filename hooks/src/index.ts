@@ -25,27 +25,19 @@ const webhookHandler: RequestHandler<WebhookParams> = async (req, res) => {
 						metadata: body,
 					},
 				});
-
 				await tx.zapRunOutbox.create({
 					data: {
 						zapRunId: run.id,
 					},
 				});
-
-				console.log(
-					`Webhook successfully hit for zapId: ${zapId}`
-				);
-			},
-			{
-				timeout: 5000,
-			}
+				console.log(`Webhook successfully hit for zapId: ${zapId}`);
+			}, 
+			{ timeout: 5000 }
 		);
-
 		res.status(200).json({
 			message: "Webhook successfully hit",
 			zapId,
 		});
-
 	} catch (error: unknown) {
 		console.error("Error processing webhook:", error);
 		res.status(500).json({
