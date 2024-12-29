@@ -21,19 +21,35 @@ function main() {
             groupId: "main-worker",
         });
         yield consumer.connect();
+        console.log(`Kafka consumer connected successfully`);
         yield consumer.subscribe({
             topic: TOPIC_NAME,
             fromBeginning: true,
         });
+        console.log(`Subscribed to topic '${TOPIC_NAME}'`);
         yield consumer.run({
+            autoCommit: false,
             eachMessage: (_a) => __awaiter(this, [_a], void 0, function* ({ topic, partition, message }) {
+                console.log(`Received message from topic '${topic}', partition '${partition}':`);
                 console.log({
+                    offset: message.offset,
                     value: message.value.toString(),
                 });
+                // do something with the message. eg: send email / send SOL
+                // simulate processing the message
+                console.log("Processing message...");
+                yield new Promise((r) => setTimeout(r, 1000));
+                console.log("Message processed successfully");
+                // manual offset management is useful when you want to ensure that an offset is 
+                // committed only after a message has been successfully processed.
+                yield consumer.commitOffsets([{
+                        topic: TOPIC_NAME,
+                        partition: partition,
+                        offset: (parseInt(message.offset) + 1).toString()
+                    }]);
+                console.log(`Offset ${parseInt(message.offset) + 1} committed successfully`);
             }),
         });
-        // do something with the message. eg: send email / send SOL
-        yield new Promise(r => setTimeout(r, 1000));
     });
 }
 main();

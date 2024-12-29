@@ -13,11 +13,13 @@ async function main() {
 	});
 
 	await consumer.connect();
+	console.log(`Kafka consumer connected successfully`);
 
 	await consumer.subscribe({
 		topic: TOPIC_NAME,
 		fromBeginning: true,
 	});
+	console.log(`Subscribed to topic '${TOPIC_NAME}'`);
 
 	await consumer.run({
 
@@ -25,12 +27,19 @@ async function main() {
 
 		eachMessage: async ({ topic, partition, message }) => {
 
+			console.log(`Received message from topic '${topic}', partition '${partition}':`);
 			console.log({
+				offset: message.offset,
 				value: message.value.toString(),
 			});
 
 			// do something with the message. eg: send email / send SOL
-			await new Promise(r => setTimeout(r, 1000))
+
+			// simulate processing the message
+			console.log("Processing message...");
+			await new Promise((r) => setTimeout(r, 1000));
+			console.log("Message processed successfully");
+
 		
 			// manual offset management is useful when you want to ensure that an offset is 
 			// committed only after a message has been successfully processed.
@@ -39,6 +48,7 @@ async function main() {
 				partition: partition,
 				offset: (parseInt(message.offset) + 1).toString()
 			}])
+			console.log(`Offset ${parseInt(message.offset) + 1} committed successfully`);
 
 		},
 	});
@@ -47,9 +57,3 @@ async function main() {
 }
 
 main();
-
-
-
-
-
-// we also need to acknowledge the picked messages from kafka

@@ -13,6 +13,7 @@ async function main() {
 
 	const producer = kafka.producer();
 	await producer.connect();
+	console.log(`Kafka producer connected successfully`);
 
 	while(1) {
 
@@ -21,6 +22,14 @@ async function main() {
 			where: {},
 			take: 10,
 		});
+		console.log(`Fetched ${pendingRows.length} rows from the database`);
+
+
+		if (pendingRows.length === 0) {
+			console.log("No pending rows found, waiting for new data...");
+			await new Promise((resolve) => setTimeout(resolve, 10000));
+			continue;
+		}
 
 		// publish it on kafka
 		producer.send({
@@ -31,6 +40,7 @@ async function main() {
 				}
 			})
 		})
+		console.log(`>> ${pendingRows.length} messages sent to Kafka topic '${TOPIC_NAME}'`);
 
 		// delete it from the db
 		await client.zapRunOutbox.deleteMany({
@@ -40,6 +50,7 @@ async function main() {
 				}
 			}
 		})
+		console.log(`>> ${pendingRows.length} rows deleted from the database`);
 
 
 	}

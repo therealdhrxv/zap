@@ -12,8 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
+const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const client = new client_1.PrismaClient();
@@ -34,9 +34,7 @@ const webhookHandler = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 },
             });
             console.log(`Webhook successfully hit for zapId: ${zapId}`);
-        }), {
-            timeout: 5000, // 5 second timeout
-        });
+        }), { timeout: 5000 });
         res.status(200).json({
             message: "Webhook successfully hit",
             zapId,
@@ -56,11 +54,10 @@ const webhookHandler = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 app.post("/hooks/catch/:userId/:zapId", webhookHandler);
-// Add error handling for uncaught exceptions
 process.on("unhandledRejection", (error) => {
     console.error("Unhandled rejection:", error);
 });
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
