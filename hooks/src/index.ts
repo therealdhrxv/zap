@@ -60,5 +60,5 @@ process.on("unhandledRejection", (error: unknown) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`);
+	console.log(`Hooks server is running on port ${PORT}`);
 });
